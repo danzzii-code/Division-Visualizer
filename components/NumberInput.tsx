@@ -4,19 +4,19 @@ interface NumberInputProps {
   label: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  maxLength: number;
+  placeholder: string;
 }
 
-const NumberInput: React.FC<NumberInputProps> = ({ label, value, onChange, maxLength }) => {
+const NumberInput: React.FC<NumberInputProps> = ({ label, value, onChange, placeholder }) => {
   return (
-    <div className="flex flex-col items-center">
-      <label className="mb-2 text-sm font-medium text-slate-600">{label}</label>
+    <div className="flex-1 w-full">
+      <label className="block mb-2 text-sm font-medium text-slate-600">{label}</label>
       <input
         type="number"
         value={value}
         onChange={onChange}
-        maxLength={maxLength}
-        className="w-full sm:w-32 text-center text-4xl font-bold p-2 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"
+        placeholder={placeholder}
+        className="w-full text-4xl font-bold p-3 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition placeholder:text-slate-400 placeholder:font-medium placeholder:text-3xl"
         onFocus={(e) => e.target.select()}
       />
     </div>

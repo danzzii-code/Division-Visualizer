@@ -1,186 +1,91 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import BlockGrid from './BlockGrid';
-import StepCard from './StepCard';
-import LongDivision from './LongDivision';
-import { ArrowDown, ArrowRight } from 'lucide-react';
-import TypewriterText from './TypewriterText';
+import React from 'react';
+
+const AreaBox: React.FC<{bgColor: string, value: number, calculation: string, className?: string}> = 
+    ({ bgColor, value, calculation, className }) => (
+    <div className={`${bgColor} ${className} text-white flex flex-col items-center justify-center p-4 min-h-[100px] transition-transform hover:scale-105`}>
+        <p className="text-2xl sm:text-3xl font-bold">{value}</p>
+        <p className="text-sm opacity-80">{calculation}</p>
+    </div>
+);
+
+const StepContainer: React.FC<{step: number, title: string, children: React.ReactNode}> = ({step, title, children}) => (
+    <div className="bg-white rounded-xl shadow-lg p-6 border border-slate-200">
+        <h3 className="flex items-center text-xl font-bold text-slate-700 mb-4">
+          <span className="flex items-center justify-center w-8 h-8 bg-indigo-500 text-white rounded-full text-sm font-bold mr-4">{step}</span>
+          {title}
+        </h3>
+        {children}
+    </div>
+);
+
 
 interface VisualizationProps {
-  dividend: number;
-  divisor: number;
+  num1: number;
+  num2: number;
 }
 
-const GroupedGrid: React.FC<{count: number, divisor: number, type: 'ten' | 'one', colorClass?: string}> = ({ count, divisor, type, colorClass }) => {
-    const numGroups = Math.floor(count / divisor);
-    const remainder = count % divisor;
+const Visualization: React.FC<VisualizationProps> = ({ num1, num2 }) => {
+    const tens1 = Math.floor(num1 / 10) * 10;
+    const ones1 = num1 % 10;
+    const tens2 = Math.floor(num2 / 10) * 10;
+    const ones2 = num2 % 10;
+
+    const p1 = tens1 * tens2;
+    const p2 = tens1 * ones2;
+    const p3 = ones1 * tens2;
+    const p4 = ones1 * ones2;
+    const total = p1 + p2 + p3 + p4;
 
     return (
-        <div className="flex flex-wrap items-start gap-4">
-            {Array.from({ length: numGroups }).map((_, i) => (
-                <div key={`group-${i}`} className="p-2 border-2 border-dashed border-sky-500 rounded-lg bg-sky-50">
-                    <BlockGrid count={divisor} type={type} colorClass={colorClass} />
+        <div className="space-y-6">
+            <StepContainer step={1} title="숫자 분해하기">
+                <div className="flex flex-col sm:flex-row justify-around items-center text-center gap-4 p-4 bg-slate-50 rounded-lg">
+                    <p className="text-xl">{num1} = <span className="font-bold text-indigo-600">{tens1}</span> + <span className="font-bold text-teal-600">{ones1}</span></p>
+                    <p className="text-xl">{num2} = <span className="font-bold text-purple-600">{tens2}</span> + <span className="font-bold text-pink-600">{ones2}</span></p>
                 </div>
-            ))}
-            {remainder > 0 && (
-                 <div className="p-2">
-                    <BlockGrid count={remainder} type={type} colorClass={colorClass} />
-                 </div>
-            )}
+            </StepContainer>
+
+            <StepContainer step={2} title="넓이 모델로 계산하기">
+                <div className="flex justify-center p-2 sm:p-4">
+                    <div className="inline-grid grid-cols-[auto_1fr_1fr] grid-rows-[auto_1fr_1fr] gap-x-2 gap-y-1">
+                        {/* Top Labels */}
+                        <div />
+                        <div className="text-center font-bold p-1 text-slate-700 text-lg">{tens2}</div>
+                        <div className="text-center font-bold p-1 text-slate-700 text-lg">{ones2}</div>
+                        
+                        {/* First Row */}
+                        <div className="text-center font-bold p-1 flex items-center justify-center text-slate-700 text-lg">{tens1}</div>
+                        <AreaBox bgColor="bg-indigo-500" value={p1} calculation={`(${tens1}×${tens2})`} className="rounded-tl-lg" />
+                        <AreaBox bgColor="bg-purple-500" value={p2} calculation={`(${tens1}×${ones2})`} className="rounded-tr-lg" />
+
+                        {/* Second Row */}
+                        <div className="text-center font-bold p-1 flex items-center justify-center text-slate-700 text-lg">{ones1}</div>
+                        <AreaBox bgColor="bg-teal-500" value={p3} calculation={`(${ones1}×${tens2})`} className="rounded-bl-lg" />
+                        <AreaBox bgColor="bg-pink-500" value={p4} calculation={`(${ones1}×${ones2})`} className="rounded-br-lg" />
+                    </div>
+                </div>
+            </StepContainer>
+
+            <StepContainer step={3} title="부분 곱 더하기">
+                 <div className="flex justify-center">
+                    <div className="text-right text-2xl font-mono tracking-wider bg-slate-50 p-6 rounded-lg">
+                        <p className="text-indigo-600">{p1}</p>
+                        <p className="text-purple-600">{p2}</p>
+                        <p className="text-teal-600">{p3}</p>
+                        <p className="text-pink-600 border-b-2 border-slate-400 pb-2">+ {p4}</p>
+                        <p className="font-bold text-3xl mt-2 text-slate-800">{total}</p>
+                    </div>
+                </div>
+            </StepContainer>
+
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white p-6 rounded-xl shadow-xl text-center">
+                <h3 className="text-xl font-bold mb-1">최종 결과</h3>
+                <p className="text-3xl sm:text-4xl font-extrabold">
+                    {num1} × {num2} = {total}
+                </p>
+            </div>
         </div>
     );
-};
-
-
-const Visualization: React.FC<VisualizationProps> = ({ dividend, divisor }) => {
-  const [longDivisionCompleted, setLongDivisionCompleted] = useState(false);
-  const [typingAnimationComplete, setTypingAnimationComplete] = useState(false);
-
-
-  useEffect(() => {
-    setLongDivisionCompleted(false);
-    setTypingAnimationComplete(false);
-  }, [dividend, divisor]);
-
-  const steps = useMemo(() => {
-    if (divisor === 0) return null;
-
-    const tensOfDividend = Math.floor(dividend / 10);
-    const onesOfDividend = dividend % 10;
-
-    const quotientTens = Math.floor(tensOfDividend / divisor);
-    const remainderTens = tensOfDividend % divisor;
-    
-    const regroupedOnes = remainderTens * 10;
-    const totalOnes = regroupedOnes + onesOfDividend;
-    
-    const quotientOnes = Math.floor(totalOnes / divisor);
-    const finalRemainder = totalOnes % divisor;
-
-    const finalQuotient = quotientTens * 10 + quotientOnes;
-
-    return {
-      tensOfDividend,
-      onesOfDividend,
-      quotientTens,
-      remainderTens,
-      regroupedOnes,
-      totalOnes,
-      quotientOnes,
-      finalRemainder,
-      finalQuotient,
-    };
-  }, [dividend, divisor]);
-
-  if (!steps) return null;
-
-  const {
-    tensOfDividend, onesOfDividend, quotientTens, remainderTens,
-    regroupedOnes, totalOnes, quotientOnes, finalRemainder, finalQuotient
-  } = steps;
-
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Step 1: Initial State */}
-        <StepCard step={1} title="나눗셈 준비하기">
-          <p className="mb-4 text-slate-600">{dividend}를 십의 묶음과 낱개로 나타냅니다.</p>
-          <div className="flex flex-wrap gap-6 items-start">
-            <div className="flex-shrink-0">
-              <p className="font-semibold text-center mb-2">십의 묶음: {tensOfDividend}개</p>
-              <BlockGrid count={tensOfDividend} type="ten" />
-            </div>
-            <div className="flex-shrink-0">
-              <p className="font-semibold text-center mb-2">낱개: {onesOfDividend}개</p>
-              <BlockGrid count={onesOfDividend} type="one" />
-            </div>
-          </div>
-        </StepCard>
-
-        {/* Step 2: Divide Tens */}
-        <StepCard step={2} title="십의 자리 나누기">
-          <p className="mb-4 text-slate-600">십의 묶음 {tensOfDividend}개를 {divisor}개씩 묶습니다. <span className="font-bold text-sky-600">{quotientTens}묶음</span>이 나오고 {remainderTens}개가 남습니다.</p>
-          <GroupedGrid count={tensOfDividend} divisor={divisor} type="ten" />
-          <p className="mt-4 font-semibold">몫의 십의 자리는 <span className="text-sky-600 text-xl">{quotientTens}</span>입니다.</p>
-        </StepCard>
-        
-        {/* Step 3: Regroup */}
-        <StepCard step={3} title="남은 십의 자리와 일의 자리 합치기">
-          <p className="mb-4 text-slate-600">남은 십의 묶음 {remainderTens}개를 낱개 {regroupedOnes}개로 바꾼 뒤, 원래 있던 낱개 {onesOfDividend}개와 합칩니다.</p>
-          <div className="flex flex-col sm:flex-row items-center gap-4 text-center">
-              <div>
-                  <p className="font-semibold mb-2">남은 십의 묶음</p>
-                  <BlockGrid count={remainderTens} type="ten" />
-              </div>
-              <ArrowRight className="text-slate-500 w-8 h-8 my-4 sm:my-0" />
-              <div>
-                  <p className="font-semibold mb-2">낱개로 풀기</p>
-                  <BlockGrid count={regroupedOnes} type="one" />
-              </div>
-              <div className="text-3xl font-bold text-slate-500">+</div>
-              <div>
-                  <p className="font-semibold mb-2">원래 낱개</p>
-                  <BlockGrid count={onesOfDividend} type="one" />
-              </div>
-          </div>
-          <div className="flex justify-center my-4"><ArrowDown className="w-8 h-8 text-slate-500" /></div>
-          <p className="mb-4 text-center text-slate-600">이제 낱개는 총 <span className="font-bold text-emerald-600">{totalOnes}</span>개가 되었습니다.</p>
-          <div className="flex justify-center">
-              <BlockGrid count={totalOnes} type="one" itemsPerRow={15} />
-          </div>
-        </StepCard>
-
-        {/* Step 4: Divide Ones */}
-        <StepCard step={4} title="일의 자리 나누기">
-          <p className="mb-4 text-slate-600">낱개 {totalOnes}개를 {divisor}개씩 묶습니다. <span className="font-bold text-emerald-600">{quotientOnes}묶음</span>이 나오고 {finalRemainder}개가 남습니다.</p>
-          <GroupedGrid count={totalOnes} divisor={divisor} type="one" />
-          <p className="mt-4 font-semibold">몫의 일의 자리는 <span className="text-emerald-600 text-xl">{quotientOnes}</span>입니다.</p>
-        </StepCard>
-      </div>
-      
-      {/* Step 5: Long Division */}
-      <StepCard step={5} title="세로셈 계산 과정">
-        <p className="mb-4 text-center text-slate-600">아래 컨트롤 버튼을 사용하여 세로셈 계산 과정을 단계별로 확인해보세요.</p>
-        <LongDivision dividend={dividend} divisor={divisor} onComplete={() => setLongDivisionCompleted(true)} />
-      </StepCard>
-
-      {/* Step 6: Final Result - Shown only after long division is completed */}
-      {longDivisionCompleted && (
-        <StepCard step={6} title="최종 결과">
-            <div className="text-center p-6 bg-slate-50 rounded-lg">
-                <p className="text-xl text-slate-700 mb-2">
-                    {dividend} ÷ {divisor}의 계산 결과는 다음과 같습니다.
-                </p>
-                <div className="text-3xl font-bold min-h-[3rem] flex items-center justify-center">
-                  {!typingAnimationComplete ? (
-                    <TypewriterText 
-                      text={`몫: ${finalQuotient}, 나머지: ${finalRemainder}`}
-                      onComplete={() => setTypingAnimationComplete(true)}
-                    />
-                  ) : (
-                    <p>
-                      몫: <span className="text-sky-600">{finalQuotient}</span>, 
-                      나머지: <span className="text-amber-600">{finalRemainder}</span>
-                    </p>
-                  )}
-                </div>
-                <div className={`mt-6 flex justify-center flex-wrap gap-6 items-start transition-opacity duration-500 ${typingAnimationComplete ? 'opacity-100' : 'opacity-0'}`}>
-                    <div>
-                        <p className="font-semibold mb-2">몫: {finalQuotient}</p>
-                        <div className="flex gap-4">
-                            <BlockGrid count={quotientTens} type="ten" />
-                            <BlockGrid count={quotientOnes} type="one" />
-                        </div>
-                    </div>
-                    <div>
-                        <p className="font-semibold mb-2">나머지: {finalRemainder}</p>
-                        <BlockGrid count={finalRemainder} type="one" colorClass="bg-amber-400" />
-                    </div>
-                </div>
-            </div>
-        </StepCard>
-      )}
-    </div>
-  );
 };
 
 export default Visualization;
