@@ -1,0 +1,5 @@
+{
+  "name": "나눗셈 시각화 도우미",
+  "description": "An educational web application to visualize the long division of a two-digit number by a one-digit number, helping users understand the concepts of grouping, regrouping, and remainders.",
+  "requestFramePermissions": []
+}
