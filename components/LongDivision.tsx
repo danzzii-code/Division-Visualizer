@@ -123,6 +123,10 @@ const LongDivision: React.FC<LongDivisionProps> = ({ dividend, divisor, onComple
   const [currentInputTens, setCurrentInputTens] = useState(''); // For tens digit of two-digit inputs
   const [currentInputOnes, setCurrentInputOnes] = useState(''); // For ones digit of two-digit inputs
   const [feedback, setFeedback] = useState<'idle' | 'wrong'>('idle');
+  
+  const step2Ref = useRef<HTMLDivElement>(null);
+  const step3Ref = useRef<HTMLDivElement>(null);
+  const step4Ref = useRef<HTMLDivElement>(null);
 
   const {
     tensOfDividend, onesOfDividend, quotientTens, firstProduct,
@@ -184,6 +188,21 @@ const LongDivision: React.FC<LongDivisionProps> = ({ dividend, divisor, onComple
   useEffect(() => {
     handleReset();
   }, [dividend, divisor]);
+  
+  useEffect(() => {
+    // Add a small delay to ensure the new element is rendered before scrolling
+    const timer = setTimeout(() => {
+      if (step === 1 && step2Ref.current) {
+        step2Ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (step === 4 && step3Ref.current) {
+        step3Ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (step === MAX_STEPS && step4Ref.current) {
+        step4Ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [step, MAX_STEPS]);
 
   const handleReset = () => {
     setStep(0);
@@ -315,63 +334,69 @@ const LongDivision: React.FC<LongDivisionProps> = ({ dividend, divisor, onComple
             </StepCard>
 
             {step >= 1 && (
-            <StepCard step={2} title={`십의 묶음 ${tensOfDividend}개를 ${divisor}개의 묶음으로 나눠요`}>
-                <p className="mb-4 text-slate-600">각 묶음에 <span className="font-bold text-sky-600">{quotientTens}</span>개의 십의 묶음을 넣을 수 있어요. 총 <span className="font-bold">{quotientTens * divisor}</span>개의 십의 묶음을 사용했어요.</p>
-                <div className="bg-slate-50 p-4 rounded-lg">
-                    <p className="font-bold text-slate-600 mb-2">나눈 결과</p>
-                    <div className={`grid ${gridColsClass} gap-2`}>
-                        {renderTensGrouped()}
-                    </div>
-                    {firstRemainder > 0 && (
-                        <div className="mt-4">
-                            <p className="font-bold text-slate-600 mb-2">남은 블록</p>
-                            <div className="flex flex-wrap gap-4 items-start p-2 border-t pt-4">
-                                <div>
-                                    <p className="font-bold mb-1 text-slate-600">십의 묶음 {remainingTensToUngroup}개</p>
-                                    <BlockGrid count={remainingTensToUngroup} type="ten" colorClass="bg-sky-200" />
-                                </div>
-                                <div>
-                                    <p className="font-bold mb-1 text-slate-600">낱개 {onesOfDividend}개</p>
-                                    <BlockGrid count={onesOfDividend} type="one" colorClass="bg-emerald-200" />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </StepCard>
+            <div ref={step2Ref}>
+              <StepCard step={2} title={`십의 묶음 ${tensOfDividend}개를 ${divisor}개의 묶음으로 나눠요`}>
+                  <p className="mb-4 text-slate-600">각 묶음에 <span className="font-bold text-sky-600">{quotientTens}</span>개의 십의 묶음을 넣을 수 있어요. 총 <span className="font-bold">{quotientTens * divisor}</span>개의 십의 묶음을 사용했어요.</p>
+                  <div className="bg-slate-50 p-4 rounded-lg">
+                      <p className="font-bold text-slate-600 mb-2">나눈 결과</p>
+                      <div className={`grid ${gridColsClass} gap-2`}>
+                          {renderTensGrouped()}
+                      </div>
+                      {firstRemainder > 0 && (
+                          <div className="mt-4">
+                              <p className="font-bold text-slate-600 mb-2">남은 블록</p>
+                              <div className="flex flex-wrap gap-4 items-start p-2 border-t pt-4">
+                                  <div>
+                                      <p className="font-bold mb-1 text-slate-600">십의 묶음 {remainingTensToUngroup}개</p>
+                                      <BlockGrid count={remainingTensToUngroup} type="ten" colorClass="bg-sky-200" />
+                                  </div>
+                                  <div>
+                                      <p className="font-bold mb-1 text-slate-600">낱개 {onesOfDividend}개</p>
+                                      <BlockGrid count={onesOfDividend} type="one" colorClass="bg-emerald-200" />
+                                  </div>
+                              </div>
+                          </div>
+                      )}
+                  </div>
+              </StepCard>
+            </div>
             )}
 
             {step >= 4 && (
-            <StepCard step={3} title={`남은 블록을 낱개로 바꿔서 나눠요`}>
-                <p className="mb-2 text-slate-600">남은 십의 묶음 <span className="font-bold">{remainingTensToUngroup}</span>개를 낱개 <span className="font-bold">{onesFromUngrouping}</span>개로 바꿉니다.</p>
-                <p className="mb-4 text-slate-600">원래 있던 낱개 <span className="font-bold">{onesOfDividend}</span>개를 더하면 총 <span className="font-bold text-emerald-600">{firstRemainder}</span>개의 낱개가 됩니다.</p>
-                <div className="bg-slate-50 p-4 rounded-lg">
-                    <p className="font-bold text-slate-600 mb-2">총 낱개 블록: {firstRemainder}개</p>
-                    <BlockGrid count={firstRemainder} type="one" itemsPerRow={10} />
-                </div>
-                 <p className="mt-4 text-slate-600">이 낱개들을 <span className="font-bold">{divisor}</span>묶음으로 나누면 각 묶음에 <span className="font-bold text-emerald-600">{quotientOnes}</span>개씩 들어가고 <span className="font-bold text-amber-600">{finalRemainder}</span>개가 남습니다.</p>
-            </StepCard>
+            <div ref={step3Ref}>
+              <StepCard step={3} title={`남은 블록을 낱개로 바꿔서 나눠요`}>
+                  <p className="mb-2 text-slate-600">남은 십의 묶음 <span className="font-bold">{remainingTensToUngroup}</span>개를 낱개 <span className="font-bold">{onesFromUngrouping}</span>개로 바꿉니다.</p>
+                  <p className="mb-4 text-slate-600">원래 있던 낱개 <span className="font-bold">{onesOfDividend}</span>개를 더하면 총 <span className="font-bold text-emerald-600">{firstRemainder}</span>개의 낱개가 됩니다.</p>
+                  <div className="bg-slate-50 p-4 rounded-lg">
+                      <p className="font-bold text-slate-600 mb-2">총 낱개 블록: {firstRemainder}개</p>
+                      <BlockGrid count={firstRemainder} type="one" itemsPerRow={10} />
+                  </div>
+                  <p className="mt-4 text-slate-600">이 낱개들을 <span className="font-bold">{divisor}</span>묶음으로 나누면 각 묶음에 <span className="font-bold text-emerald-600">{quotientOnes}</span>개씩 들어가고 <span className="font-bold text-amber-600">{finalRemainder}</span>개가 남습니다.</p>
+              </StepCard>
+            </div>
             )}
 
             {step >= MAX_STEPS && (
-                <StepCard step={4} title="나눗셈 결과">
-                    <p className="mb-4 text-lg">
-                        <span className="font-bold text-indigo-600">{dividend}</span> ÷ <span className="font-bold text-indigo-600">{divisor}</span>의 몫은 <span className="font-bold text-sky-600">{finalQuotient}</span>이고, 나머지는 <span className="font-bold text-amber-600">{finalRemainder}</span>입니다.
-                    </p>
-                    <div className="bg-slate-50 p-4 rounded-lg">
-                        <p className="font-bold text-slate-600 mb-2">몫: 각 묶음</p>
-                         <div className={`grid ${gridColsClass} gap-2 mb-4`}>
-                            {renderFinalGroups()}
-                        </div>
+                <div ref={step4Ref}>
+                  <StepCard step={4} title="나눗셈 결과">
+                      <p className="mb-4 text-lg">
+                          <span className="font-bold text-indigo-600">{dividend}</span> ÷ <span className="font-bold text-indigo-600">{divisor}</span>의 몫은 <span className="font-bold text-sky-600">{finalQuotient}</span>이고, 나머지는 <span className="font-bold text-amber-600">{finalRemainder}</span>입니다.
+                      </p>
+                      <div className="bg-slate-50 p-4 rounded-lg">
+                          <p className="font-bold text-slate-600 mb-2">몫: 각 묶음</p>
+                          <div className={`grid ${gridColsClass} gap-2 mb-4`}>
+                              {renderFinalGroups()}
+                          </div>
 
-                         {finalRemainder > 0 && (
-                            <div className="mt-4 border-t pt-4">
-                                <p className="font-bold text-slate-600 mb-2">나머지</p>
-                                <BlockGrid count={finalRemainder} type="one" />
-                            </div>
-                        )}
-                    </div>
-                </StepCard>
+                          {finalRemainder > 0 && (
+                              <div className="mt-4 border-t pt-4">
+                                  <p className="font-bold text-slate-600 mb-2">나머지</p>
+                                  <BlockGrid count={finalRemainder} type="one" />
+                              </div>
+                          )}
+                      </div>
+                  </StepCard>
+                </div>
             )}
 
         </div>
